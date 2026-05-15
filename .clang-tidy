@@ -1,0 +1,13 @@
+Checks: >
+  bugprone-*,
+  performance-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -readability-*,
+  -readability-identifier-length,
+  -readability-braces-around-statements,
+  -readability-uppercase-literal-suffix,
+  -readability-magic-numbers
+
+WarningsAsErrors: ""
+HeaderFilterRegex: ".*"

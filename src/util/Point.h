@@ -16,7 +16,7 @@ struct Point : public Tuple {
         return {data - other.data};
     }
 
-    Vector operator-(const Vector& other) const {
+    Point operator-(const Vector& other) const {
         return {data - other.data};
     }
 };

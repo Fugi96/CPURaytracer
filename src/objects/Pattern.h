@@ -26,6 +26,9 @@ struct CheckersPattern {
     Color b;
 };
 
+struct TestPattern {
+};
+
 struct Pattern {
     Matrix<4, 4> transform = Matrix<4, 4>::identity();
     Matrix<4, 4> transform_inv = Matrix<4, 4>::identity();
@@ -35,13 +38,21 @@ struct Pattern {
         this->transform_inv = Matrix<4, 4>::inverse(transformation);
     }
 
-    std::variant<StripePattern, 
+    std::variant<TestPattern,
+                 StripePattern, 
                  GradientPattern, 
                  RingPattern,
                  CheckersPattern> type;
 };
 
 namespace Patterns {
+
+inline Color local_pattern_at(
+    const TestPattern& pattern,
+    const Point& point)
+{
+    return Color(point.data.x, point.data.y, point.data.z);
+}
 
 inline Color local_pattern_at(
     const StripePattern& pattern,
@@ -133,5 +144,12 @@ inline Pattern Checkers(Color a, Color b) {
             .b = b
         }
     }; 
+}
+
+inline Pattern Test() {
+    return Pattern{
+        .transform = Matrix<4, 4>::identity(),
+        .type = TestPattern{}
+    };
 }
 }

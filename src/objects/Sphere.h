@@ -13,6 +13,14 @@ struct Sphere : public Object {
 
     [[nodiscard]] Vector local_normal_at(const Point& p) const override;
 
+    static Sphere Glass_Sphere(const std::string& name = "") {
+        Sphere s(name);
+        s.material.m_transparency = 1.0f;
+        s.material.m_refractive_index = 1.5f;
+
+        return s;
+    }
+
 private:
     virtual bool equals(const Object& other) {
         if (!Object::equals(other)) return false;

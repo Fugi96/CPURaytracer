@@ -12,6 +12,8 @@ struct Material {
     float m_specular{ 0.9f };
     float m_shininess{ 200.0f };
     float m_reflective{ 0.0f };
+    float m_transparency{ 0.0f };
+    float m_refractive_index{ 1.0f };
 
     Material() {}
     Material(Color color, float ambient, float diffuse, float specular, float shininess) : 

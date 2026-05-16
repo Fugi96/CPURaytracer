@@ -73,6 +73,45 @@ TEST_CASE("Stripes with an object transformation") {
     Pattern pattern = Patterns::Stripe(WHITE, BLACK);
 }
 
+TEST_CASE("Assigning a transformation to a pattern") {
+    Pattern pattern = Patterns::Test();
+    pattern.set_transform(Matrix<4, 4>::translation(1, 2, 3));
+    REQUIRE(pattern.transform == Matrix<4, 4>::translation(1, 2 ,3));
+}
+
+TEST_CASE("A pattern with an object transformation") {
+    Sphere shape = Sphere();
+    shape.set_transform(Matrix<4, 4>::scaling(2, 2, 2));
+    Pattern pattern = Patterns::Test();
+    shape.material.pattern = pattern;
+    Color c = shape.pattern_at(Point(2, 3, 4));
+    
+    REQUIRE(c == Color(1, 1.5f, 2));
+}
+
+TEST_CASE("A pattern with a pattern transformation") {
+    Sphere shape = Sphere();
+    Pattern pattern = Patterns::Test();
+    pattern.set_transform(Matrix<4, 4>::scaling(2, 2, 2));
+    shape.material.pattern = pattern;
+    Color c = shape.pattern_at(Point(2, 3, 4));
+    
+    REQUIRE(c == Color(1, 1.5f, 2));
+}
+
+TEST_CASE("A pattern with both an object and a pattern transformation") {
+    Sphere shape = Sphere();
+    Pattern pattern = Patterns::Test();
+
+    shape.set_transform(Matrix<4, 4>::scaling(2, 2, 2));
+    pattern.set_transform(Matrix<4, 4>::translation(0.5f, 1.0f, 1.5f));
+
+    shape.material.pattern = pattern;
+    Color c = shape.pattern_at(Point(2.5f, 3, 3.5f));
+    
+    REQUIRE(c == Color(0.75f, 0.5f, 0.25f));
+}
+
 TEST_CASE("A gradient linearly interpolates between colors") {
     Pattern pattern = Patterns::Gradient(WHITE, BLACK);
 

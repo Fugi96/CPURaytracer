@@ -54,7 +54,8 @@ struct World {
             this->light, comps.over_point, comps.eyev, comps.normalv, shadowed);
 
         Color reflected = reflected_color(comps, remaining);
-        return surface + reflected;
+        Color refracted = refracted_color(comps, remaining);
+        return surface + reflected + refracted;
     }
 
     //std::array<Color, 8> shade_hit8(const PreCompute* comps) {
@@ -92,20 +93,12 @@ struct World {
 
         for (const Plane& p : this->planes)
             p.intersect8(rays, xs);
-
-        //u_int8_t hits = 0b00000000;
-        //for (size_t i = 0; i < 8; ++i) {
-        //    hits |= (bestHits[i].m_object != nullptr) << i;
-        //}
-        //return hits;
     }
 
     std::array<Color, 8> color_at_batch(const Ray* rays, int remaining = MAX_RAY_BOUNCES) {
         IntersectionPacket xs;
 
         this->intersect8(rays, xs);
-
-        //u_int8_t boolHits = this->intersect8(rays, xs);
 
         std::array<Color, 8> result;
 
@@ -204,5 +197,26 @@ struct World {
 
         Ray reflect_ray(comps.over_point, comps.reflectv);
         return color_at(reflect_ray, remaining - 1)*comps.m_object->material.m_reflective;
+    }
+
+    Color refracted_color(const PreCompute& comps, int remaining = MAX_RAY_BOUNCES) {
+        if (remaining == 0 || comps.m_object->material.m_transparency == 0.0f)
+            return {0.0f, 0.0f, 0.0f};
+
+
+        float n_ratio = comps.n1/comps.n2;
+        float cos_i = Vector::dot(comps.eyev, comps.normalv);
+        float sin2_t = n_ratio*n_ratio*(1.0f - (cos_i*cos_i));
+
+        if (sin2_t > 1.0f)
+            return {0.0f, 0.0f, 0.0f};
+
+        float cos_t = std::sqrtf(1.0f - sin2_t);
+        Vector direction = comps.normalv * (n_ratio*cos_i-cos_t) - comps.eyev*n_ratio;
+
+        Ray refract_ray(comps.under_point, direction);
+
+        return color_at(refract_ray, remaining - 1);
+
     }
 };

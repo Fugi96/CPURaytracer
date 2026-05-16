@@ -4,8 +4,9 @@
 #include "Vector.h"
 #include "util.h"
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
-#include <vector>
 
 static constexpr int MAX_XS = 8;
 
@@ -27,7 +28,7 @@ struct Intersection {
             });
     }
 
-    static bool hit(Intersection* xs, uint8_t count, Intersection& hit) {     
+    static bool hit(const Intersection* xs, uint8_t count, Intersection& hit) {     
     bool found = false;
 
         for (int i = 0; i < count; ++i) {
@@ -69,7 +70,12 @@ struct PreCompute {
     Vector reflectv;
     Vector normalv;
     Point over_point;
+    Point under_point;
     bool inside{ false };
+    float n1;
+    float n2;
+
+    PreCompute() = default;
 
     PreCompute(const Intersection& i, const Ray& r) : t(i.t),
         m_object(i.m_object), point(r.position(i.t)), eyev(-r.m_direction),
@@ -80,5 +86,51 @@ struct PreCompute {
         }
         this->reflectv = Vector::reflect(r.m_direction, this->normalv);
         this->over_point = this->point + this->normalv * EPSILON;
+        this->under_point = this->point - this->normalv * EPSILON;
+    }
+
+    PreCompute(const Intersection& i, const Ray& r, const Intersection* xs, uint8_t xs_count) : t(i.t),
+        m_object(i.m_object), point(r.position(i.t)), eyev(-r.m_direction),
+        normalv(i.m_object->normal_at(point)) {
+        if (Vector::dot(this->normalv, this->eyev) < 0) {
+            this->inside = true;
+            this->normalv = -this->normalv;
+        }
+        this->reflectv = Vector::reflect(r.m_direction, this->normalv);
+        this->over_point = this->point + this->normalv * EPSILON;
+        this->under_point = this->point - this->normalv * EPSILON;
+
+        std::array<const Object*, (MAX_XS+1)/2> containers;
+        uint8_t containers_count = 0;
+
+        for (size_t j = 0; j < xs_count; ++j) {
+            if (xs[j] == i) {
+                this->n1 = (containers_count == 0) 
+                           ? 1.0f 
+                           : containers[containers_count - 1]->material.m_refractive_index;
+            }
+        
+            auto it = std::find(containers.begin(), 
+                containers.begin() + containers_count, 
+                xs[j].m_object);
+            
+            if (it != containers.begin() + containers_count) {
+                auto index = std::distance(containers.begin(), it);
+                for (size_t k = index; k < containers_count - 1; ++k) {
+                    containers[k] = containers[k + 1];
+                }
+                --containers_count;
+            }
+            else {
+                containers[containers_count++] = xs[j].m_object;
+            }
+            if (xs[j] == i) {
+                this->n2 = (containers_count == 0)
+                           ? 1.0f
+                           : containers[containers_count - 1]->material.m_refractive_index;
+                break;
+            }
+
+        }
     }
 };
